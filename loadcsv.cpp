@@ -4,6 +4,12 @@
 #include <string>
 #include <vector>
 #include <cmath> 
+// Lin-alg library 
+#include <Eigen/Dense>
+
+#include <ctime> 
+#include <algorithm> 
+#include <cstdlib> 
 
 using namespace std;
 
@@ -98,7 +104,7 @@ double stdev(const vector<double>& values) {
     return sqrt(squared_diff / values.size()); 
 }
 
-// Standardize a vector
+// Standardize a vector (Z-score standardization
 void standardize(vector<double>& values) {
     double meanVal = mean(values);
     double sigma = stdev(values);
@@ -121,6 +127,41 @@ vector<vector<double>> standardizeCols(vector<vector<double>> data) {
     return data;
 }
 
+// --------------Splitting data -------------------------------------
+using namespace std;
+
+//Split data into training and testing sets with a given split percentage
+void splitData(const vector<vector<double>>& data, double splitPercentage, vector<vector<double>>& trainingData, vector<vector<double>>& testingData) {
+   
+    // Seed the random number generator for shuffling
+    srand(time(nullptr));
+
+    // Create an index vector to shuffle data
+    vector<size_t> indices(data.size());
+    for (size_t i = 0; i < data.size(); ++i) {
+        indices[i] = i;
+    }
+
+    // Shuffle the indices
+    random_shuffle(indices.begin(), indices.end());
+
+    // Determine the split point
+    size_t splitIndex = static_cast<size_t>(splitPercentage * data.size());
+
+    // Split the data
+    trainingData.clear();
+    testingData.clear();
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        if (i < splitIndex) {
+            trainingData.push_back(data[indices[i]]);
+        } else {
+            testingData.push_back(data[indices[i]]);
+        }
+    }
+}
+
+
 void printCSV(vector<vector<double>> data) {
     for (const vector<double>&row : data) {
         for(double value : row){
@@ -131,13 +172,38 @@ void printCSV(vector<vector<double>> data) {
     return; 
 }
 
+// ------------------ Regression (Least Squares)-------------------
+
+vector<vector<double>> transpose(const vector<vector<double>>& matrix) {
+    int rows = matrix.size(); 
+    int cols = matrix[0].size(); 
+    // Result Vector
+    vector<vector<double>> result(cols, vector<double>(rows, 0.0));
+    // Transpose
+    for(int i = 0; i < rows; i++){
+        for(int j = 0; j < cols; j++){
+            result[j][i] = matrix[i][j]; 
+        }
+    }
+    return result
+}
+
+
 
 int main() {
     // Example usage
+    vector<vector<double>> trainData; 
+    vector<vector<double>> testData; 
+
+    // Load data
     string filename = "HousingData.csv";
     vector<vector<double>> data = loadCSV(filename);
+
+    // Standardize data 
     data = standardizeCols(data);
-    printCSV(data); 
+
+    // Split data 70/30
+    splitData(data, 0.7, trainData, testData);
 
 
     return 0;
